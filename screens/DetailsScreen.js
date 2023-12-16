@@ -1,84 +1,254 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons'
+import CalendarPicker from 'react-native-calendar-picker';
 
-function DetailsScreen({ route }) {
-    const [data, setData] = useState([])
-    const [payment, setPaymentAmount] = useState(0)
-    const { navigate } = useNavigation()
-    useEffect(() => {
-        // console.log(route.params.item.$Name);
-        const key = route.params.item.$Name;
-        const apiUrl = 'http://192.168.29.3:4000/voucherDetails';
-        const queryParams = { key: key };
+import { useRoute } from '@react-navigation/native';
 
-        // Create a URLSearchParams object and append the query parameters
-        const searchParams = new URLSearchParams(queryParams);
+import Modal from 'react-native-modal';
+import { getTotalPurchaseAmount, getTotalSalesAmount } from '../DatabaseConfig';
 
-        // Combine the base URL with the query parameters
-        const apiUrlWithQuery = `${apiUrl}?${searchParams}`;
-        console.log(apiUrlWithQuery);
-        fetch(apiUrlWithQuery)
-            .then(response => response.json()).then(data => {
-                // console.log('Response from server:', data);
-                const mainData = data.document.value;
-                setData(mainData);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        return () => {
-            console.log("Effect cleared");
-        };
-    }, []);
-    console.log("Data Received is", data);
+// import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+const DetailsScreen = ({ navigation }) => {
+
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [isExpanded, setExpanded] = useState(false);
+
+    const handleToggle = () => {
+        setExpanded(!isExpanded);
+    };
+
+
+    const [selectedStartDate, setSelectedStartDate] = useState(null);
+    const [selectedEndDate, setSelectedEndDate] = useState(null);
+    const [purchaseAmount, setPurchaseAmount] = useState(null);
+    const [salesAmount, setSalesAmount] = useState(null);
+    const [isModalVisible, setModalVisible] = useState(false);
+
+    if (selectedStartDate) {
+        console.log("Dates Selected are", selectedStartDate, selectedEndDate, selectedStartDate.toString());
+
+    }
+    const onDateChange = (date, type) => {
+        if (type === 'END_DATE') {
+            setSelectedEndDate(date);
+        } else {
+            setSelectedStartDate(date);
+            setSelectedEndDate(date); // Set the end date to the same as the start date initially
+        }
+    };
+    const toggleModal = () => {
+        setModalVisible(!isModalVisible);
+    };
+    const route = useRoute();
+
+    const { someKey } = route.params;
+
+    console.log("navigation data ius", someKey);
+
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            title: `${someKey.name}`,
+            headerStyle: {
+                backgroundColor: '#5605fd',
+            },
+            headerTintColor: 'white',
+            headerRight: () => (
+                <View style={{ flexDirection: 'row', marginRight: 4 }}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            // Handle details icon press
+                        }}
+                    >
+                        <Icon name="information-circle-outline" size={20} color="white" />
+                    </TouchableOpacity>
+
+                    {/* Call Icon */}
+                    <TouchableOpacity
+                        style={{ marginLeft: 15, marginRight: 15 }}
+                        onPress={() => {
+                            // Handle call icon press
+                        }}
+                    >
+                        <Icon name="call-outline" size={20} color="white" />
+                    </TouchableOpacity>
+                </View>
+            ),
+            // You can add more options as needed
+        });
+
+    }, [navigation]);
+
+    React.useLayoutEffect(() => {
+        getTotalPurchaseAmount(someKey.id, setPurchaseAmount)
+        getTotalSalesAmount(someKey.id, setSalesAmount)
+
+    }, [navigation]);
+
+    console.log("purhcase amount is", purchaseAmount);
     return (
-        <View>
-            <TouchableOpacity style={styles.detailsTab} onPress={() => navigate('PurchaseScreen', { data: data.Purchase, setAmount: setPaymentAmount })}>
-                <Text style={styles.text}>Purchase</Text>
-                <Text style={styles.amount}>Rs 50</Text>
+        <View style={styles.container}>
+            {/* <Text style={styles.title}>Select Date Range</Text> */}
+            <TouchableOpacity onPress={toggleModal} style={styles.button}>
+                <Text style={styles.buttonText}>Open Calendar</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigate('PaymentScreen')}>
-                <Text>Payment</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-                <Text>Payable</Text>
-            </TouchableOpacity>
+            {purchaseAmount && (
+                <View style={styles.textContainer}>
+                    <TouchableOpacity style={styles.mainList} onPress={handleToggle}>
+                        <Text style={{ color: 'black', fontWeight: 300 }}>Overview</Text>
+                        <Icon name={isExpanded ? 'remove-circle' : 'add-circle'} size={24} color="#c4c4c4" />
+                    </TouchableOpacity>
+                    <View style={[styles.bottomList, isExpanded && { display: 'block' }]}>
+                        <View style={styles.mainList}>
+                            <Text style={{ color: 'black', fontWeight: 300 }}>Last Purchase Date</Text>
+                        </View>
+                        <View style={styles.mainList} >
+                            <Text style={{ color: 'black', fontWeight: 300 }}>Last Payment Date</Text>
+                        </View>
+                        <View style={styles.mainList} >
+                            <Text style={{ color: 'black', fontWeight: 300 }}>No of Purchase Invoices</Text>
+                        </View>
+                        <View style={styles.mainList}>
+                            <Text style={{ color: 'black', fontWeight: 300 }}>Avg Purchase Invoice Amt</Text>
+                        </View>
+                    </View>
+                    <View style={[styles.textContainer, { marginTop: 20 }]}>
+                        <TouchableOpacity style={styles.mainList}
+                            onPress={() => navigation.navigate('PurchaseScreen', { someKey: someKey })}
+                        >
+                            <Text>PurchaseVouchers </Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{purchaseAmount.toLocaleString('en-IN', {
+                                maximumFractionDigits: 2,
+                                style: 'currency',
+                                currency: 'INR'
+                            })} </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
+            {salesAmount && (
+                <View style={styles.textContainer}>
+                    <TouchableOpacity style={styles.mainList} onPress={handleToggle}>
+                        <Text style={{ color: 'black', fontWeight: 300 }}>Overview</Text>
+                        <Icon name={isExpanded ? 'remove-circle' : 'add-circle'} size={24} color="#c4c4c4" />
+                    </TouchableOpacity>
+                    <View style={[styles.bottomList, isExpanded && { display: 'block' }]}>
+                        <View style={styles.mainList}>
+                            <Text style={{ color: 'black', fontWeight: 300 }}>Last Purchase Date</Text>
+                        </View>
+                        <View style={styles.mainList} >
+                            <Text style={{ color: 'black', fontWeight: 300 }}>Last Payment Date</Text>
+                        </View>
+                        <View style={styles.mainList} >
+                            <Text style={{ color: 'black', fontWeight: 300 }}>No of Purchase Invoices</Text>
+                        </View>
+                        <View style={styles.mainList}>
+                            <Text style={{ color: 'black', fontWeight: 300 }}>Avg Purchase Invoice Amt</Text>
+                        </View>
+                    </View>
+                    <View style={[styles.textContainer, { marginTop: 20 }]}>
+                        <TouchableOpacity style={styles.mainList}
+                            onPress={() => navigation.navigate('PurchaseScreen', { someKey: someKey })}
+                        >
+                            <Text>SalesVouchers </Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{salesAmount.toLocaleString('en-IN', {
+                                maximumFractionDigits: 2,
+                                style: 'currency',
+                                currency: 'INR'
+                            })} </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
 
-        </View >
+            <Modal isVisible={isModalVisible} animationIn="slideInUp" animationOut="slideOutDown">
+                <View style={styles.modalContainer}>
+                    <CalendarPicker
+                        startFromMonday={true}
+                        allowRangeSelection={true}
+                        selectedStartDate={selectedStartDate}
+                        selectedEndDate={selectedEndDate}
+                        onDateChange={onDateChange}
+                        selectedDayColor="#5605fd"
+                        selectedDayTextColor="white"
+                        width={370}
+                        height={400}
+                    />
+                    <TouchableOpacity onPress={toggleModal} style={styles.closeButton}>
+                        <Text style={styles.buttonText}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
+
+        </View>
+
     );
-}
-
+};
 const styles = StyleSheet.create({
-    detailsTab: {
-        display: 'flex',
-        flexDirection: 'row', // Arrange children in a row
-        borderWidth: 1,          // Border width
-        borderColor: '#000',
-        alignItems: 'center', // Center items vertically
-        backgroundColor: 'white',
-        padding: 10,
-        margin: 10,
-        borderRadius: 5,
-        justifyContent: 'space-between',
-    },
     textContainer: {
-        flex: 1, // Take as much space as available
-        alignItems: 'flex-start', // Align text to the start of the container (corner)
+        // borderWidth: 5,
+        // borderColor: 'red',
+        marginTop: 20
     },
-    text: {
-        fontSize: 16,
+    mainList: {
+        backgroundColor: 'white',
+        borderRadius: 8,
+        padding: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderColor: 'grey'
+
+    },
+    bottomList: {
+        display: 'none',
+
+    },
+    container: {
+        // flex: 1,
+        // justifyContent: 'center',
+        // alignItems: 'center',
+        // padding: 16,
+    },
+    title: {
+        fontSize: 20,
         fontWeight: 'bold',
-        color: 'blue',
+        marginBottom: 16,
     },
-    amountContainer: {
-        alignItems: 'flex-end', // Align amount to the end of the container (corner)
+    button: {
+        backgroundColor: '#5605fd',
+        padding: 10,
+        // borderRadius: 5,
+        // marginBottom: 20,
     },
-    amount: {
-        fontSize: 16,
+    buttonText: {
+        color: 'white',
+        textAlign: 'center',
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        padding: 16,
+        // width: 3500,
+        borderRadius: 10,
+    },
+    closeButton: {
+        backgroundColor: '#5605fd',
+        padding: 10,
+        borderRadius: 5,
+        marginTop: 20,
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    headerText: {
+        fontSize: 18,
         fontWeight: 'bold',
-        color: 'blue',
+        color: '#3498db',
     },
-})
+});
 
 export default DetailsScreen;

@@ -7,8 +7,9 @@ import HomeScreen from './screens/HomeScreen'
 import DetailsScreen from './screens/DetailsScreen'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import {SafeAreaView} from 'react-native-safe-area-context'
-
-import {createTable} from './DatabaseConfig'
+import {createTable, fetchDataFromBackend} from './DatabaseConfig'
+import PurchaseVouchersScreen from './screens/PurchaseVouchersScreen'
+import PurchaseVoucherDetails from './screens/PurchaseVoucherDetails'
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -20,7 +21,12 @@ const HomeStack: React.FC = () => (
       component={HomeScreen}
       options={{headerShown: false}}
     />
-    <Stack.Screen name="Details" component={DetailsScreen} />
+    <Stack.Screen name="DetailsScreen" component={DetailsScreen} />
+    <Stack.Screen name="PurchaseScreen" component={PurchaseVouchersScreen} />
+    <Stack.Screen
+      name="PurchaseVoucherScreen"
+      component={PurchaseVoucherDetails}
+    />
   </Stack.Navigator>
 )
 
@@ -45,6 +51,7 @@ const SupportStack: React.FC = () => (
 const App: React.FC = () => {
   useEffect(() => {
     createTable()
+    // fetchDataFromBackend()
   }, [])
 
   return (
