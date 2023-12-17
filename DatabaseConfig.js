@@ -4,7 +4,7 @@
 import { openDatabase } from 'react-native-sqlite-storage';
 
 const db = openDatabase({
-    name: 'new_t11222rial12_11db',
+    name: 'insight12111',
 });
 // Function to create a table
 const createTable = () => {
@@ -199,7 +199,7 @@ const searchItems = (searchQuery, callback) => {
                         let item = result.rows.item(i);
                         results.push({ id: item.LedgerID, name: item.LedgerName });
                     }
-                    console.log('fetching search items:');
+                    console.log('fetching search items:', results[0]);
                 }
                 callback(results);
             },
@@ -211,6 +211,7 @@ const searchItems = (searchQuery, callback) => {
 };
 // Function to fetch all items from the table
 const getAllItems = callback => {
+    console.log("getAllitems called");
     db.transaction(txn => {
         txn.executeSql(
             'SELECT * FROM Ledgers',
@@ -237,25 +238,152 @@ const getAllItems = callback => {
     });
 };
 
-const getTotalPurchaseAmount = (id, callback) => {
-    db.transaction(tx => {
-        tx.executeSql(`SELECT SUM(TOTALAMOUNT) AS total_sum FROM PurchaseVouchers WHERE LedgerID = ${id}`, [], (tx, results) => {
-            const totalSum = results.rows.item(0).total_sum;
-            console.log('Total Sum of CGST, SGST, PURCHASELOCAL:', totalSum);
-            callback(totalSum)
-        })
-    })
-}
 
-const getTotalSalesAmount = (id, callback) => {
-    db.transaction(tx => {
-        tx.executeSql(`SELECT SUM(TOTALAMOUNT) AS total_sum FROM SalesVouchers WHERE LedgerID = ${id}`, [], (tx, results) => {
-            const totalSum = results.rows.item(0).total_sum;
-            console.log('Total Sum of sales', totalSum);
-            callback(totalSum)
-        })
-    })
-}
+const getLedgerDetails = async (id, callback) => {
+    console.log("entered database details function");
+
+    const runQuery = () => {
+        return new Promise((resolve, reject) => {
+            const ledgerDetails = [];
+
+            db.transaction(tx => {
+                tx.executeSql(
+                    `SELECT SUM(TOTALAMOUNT) AS total_sum FROM SalesVouchers WHERE LedgerID = ${id}`,
+                    [],
+                    (tx, results) => {
+                        const salesSum = results.rows.item(0).total_sum;
+
+                        if (salesSum) {
+                            // Query 2: Last Sales Date
+                            tx.executeSql(
+                                `SELECT * FROM SalesVouchers WHERE LedgerID = ${id} ORDER BY voucherID DESC LIMIT 1`,
+                                [],
+                                (tx, results) => {
+                                    const lastSalesDate = results.rows.item(0)?.DATE || 'N/A';
+                                    console.log("Last sales date", lastSalesDate);
+
+                                    // Query 3: No. of Sales Vouchers
+                                    tx.executeSql(
+                                        `SELECT COUNT(*) AS recordCount FROM SalesVouchers WHERE LedgerID = ${id}`,
+                                        [],
+                                        (tx, results) => {
+                                            const noOfSalesVouchers = results.rows.item(0).recordCount;
+                                            console.log("No of Sales Vouchers", noOfSalesVouchers);
+
+                                            // Query 4: Last Receipt Date
+                                            tx.executeSql(
+                                                `SELECT * FROM ReceiptVouchers WHERE LedgerID = ${id} ORDER BY ID DESC LIMIT 1`,
+                                                [],
+                                                (tx, results) => {
+                                                    const lastReceiptDate = results.rows.item(0)?.DATE || 'N/A';
+                                                    console.log("Last Receipt date", lastReceiptDate);
+
+                                                    // Query 5: Receipt Sum
+                                                    tx.executeSql(
+                                                        `SELECT SUM(AMOUNT) AS receipt_sum FROM ReceiptVouchers WHERE LedgerID = ${id}`,
+                                                        [],
+                                                        (tx, results) => {
+                                                            const receiptSum = results.rows.item(0).receipt_sum || 0;
+                                                            console.log("Receipt Sum", receiptSum);
+
+                                                            ledgerDetails.push({
+                                                                "totalSalesAmount": salesSum,
+                                                                "lastSalesDate": lastSalesDate,
+                                                                "receiptSum": receiptSum,
+                                                                "lastReceiptDate": lastReceiptDate,
+                                                                "totalSalesInvoices": noOfSalesVouchers
+                                                            });
+
+                                                            resolve(ledgerDetails);
+                                                        }
+                                                    );
+                                                }
+                                            );
+                                        }
+                                    );
+                                }
+                            );
+                        } else {
+                            console.log("function for purchase vouchers called");
+
+                            // Query 6: Total Purchase Amount
+                            tx.executeSql(
+                                `SELECT SUM(TOTALAMOUNT) AS total_sum FROM PurchaseVouchers WHERE LedgerID = ${id}`,
+                                [],
+                                (tx, results) => {
+                                    const purchaseSum = results.rows.item(0).total_sum;
+
+                                    tx.executeSql(
+                                        `SELECT * FROM PurchaseVouchers WHERE LedgerID = ${id} ORDER BY ID DESC LIMIT 1`,
+                                        [],
+                                        (tx, results) => {
+                                            const lastPurchaseDate = results.rows.item(0)?.DATE || 'N/A';
+                                            console.log("Last purchase date", lastPurchaseDate);
+
+                                            // Query 3: No. of Sales Vouchers
+                                            tx.executeSql(
+                                                `SELECT COUNT(*) AS recordCount FROM PurchaseVouchers WHERE LedgerID = ${id}`,
+                                                [],
+                                                (tx, results) => {
+                                                    const noOfPurchaseVouchers = results.rows.item(0).recordCount;
+                                                    console.log("No of Sales Vouchers", noOfPurchaseVouchers);
+
+                                                    // Query 4: Last Receipt Date
+                                                    tx.executeSql(
+                                                        `SELECT * FROM PaymentVouchers WHERE LedgerID = ${id} ORDER BY ID DESC LIMIT 1`,
+                                                        [],
+                                                        (tx, results) => {
+                                                            const lastPaymentDate = results.rows.item(0)?.DATE || 'N/A';
+                                                            console.log("Last Payment date", lastPaymentDate);
+
+                                                            // Query 5: Receipt Sum
+                                                            tx.executeSql(
+                                                                `SELECT SUM(AMOUNT) AS payment_sum FROM PaymentVouchers WHERE LedgerID = ${id}`,
+                                                                [],
+                                                                (tx, results) => {
+                                                                    const paymentSum = results.rows.item(0).payment_sum || 0;
+                                                                    console.log("Payment Sum", paymentSum);
+
+                                                                    ledgerDetails.push({
+                                                                        "totalPurchaseAmount": purchaseSum,
+                                                                        "lastPurchaseDate": lastPurchaseDate,
+                                                                        "paymentSum": paymentSum,
+                                                                        "lastPaymentDate": lastPaymentDate,
+                                                                        "totalPurchaseInvoices": noOfPurchaseVouchers
+                                                                    });
+
+                                                                    resolve(ledgerDetails);
+                                                                }
+                                                            );
+                                                        }
+                                                    );
+                                                }
+                                            );
+                                        }
+                                    );
+                                }
+                            );
+                        }
+                    }
+                );
+            });
+        });
+    };
+
+    try {
+        const ledgerDetails = await runQuery();
+        console.log("details fetched from database", ledgerDetails);
+        callback(ledgerDetails);
+    } catch (error) {
+        console.error("Error fetching ledger details:", error);
+        callback([]);
+    }
+};
+``
+
+
+
+
 
 const getPurchaseVouchers = (id, callback) => {
 
@@ -286,6 +414,34 @@ const getPurchaseVouchers = (id, callback) => {
     });
 }
 
+const getSalesVouchers = (id, callback) => {
+
+    db.transaction(txn => {
+        txn.executeSql(
+            `SELECT * FROM SalesVouchers WHERE LedgerID = ${id}`,
+            null,
+            (tx, result) => {
+                let len = result.rows.length;
+
+                let results = [];
+                if (len > 0) {
+                    for (let i = 0; i < len; i++) {
+                        let item = result.rows.item(i);
+                        results.push(item);
+                    }
+                    console.log('fetching items:', results);
+                    callback(results)
+                }
+                // callback(results);
+                return true;
+            },
+            error => {
+                console.error('Error fetching Vouchers', error);
+                return false;
+            },
+        );
+    });
+}
 
 const dropTable = () => {
     db.transaction((txn) => {
@@ -304,6 +460,7 @@ const dropTable = () => {
 
 
 async function fetchDataFromBackend() {
+
     try {
         const purchaseResponse = await fetch('http://192.168.29.3:3000/getPurchaseV');
         const salesResponse = await fetch('http://192.168.29.3:3000/getSalesV');
@@ -311,6 +468,7 @@ async function fetchDataFromBackend() {
         const paymentVouchersres = await fetch('http://192.168.29.3:3000/getPaymentV');
         const receiptVouchersres = await fetch('http://192.168.29.3:3000/getReceiptV');
         const inventoryres = await fetch('http://192.168.29.3:3000/getInventory');
+        const ledgers = await fetch('http://192.168.29.3:3000/ledgers');
 
         const purchaseVouchersData = await purchaseResponse.json();
         const salesVouchersData = await salesResponse.json();
@@ -318,15 +476,16 @@ async function fetchDataFromBackend() {
         const paymentVouchersData = await paymentVouchersres.json();
         const receiptVouchersData = await receiptVouchersres.json();
         const inventoryData = await inventoryres.json();
+        const ledgersData = await ledgers.json();
 
 
+        storeLedgers(ledgersData)
         storePurchaseVouchers(purchaseVouchersData)
         storeSalesVouchers(salesVouchersData)
         storePaymentVouchers(paymentVouchersData)
         storeReceiptVouchers(receiptVouchersData)
         storeSaleItems(saleItemsData)
         storeInventoryData(inventoryData)
-
         // console.log("data received is ", data[0]);
 
     } catch (error) {
@@ -335,6 +494,24 @@ async function fetchDataFromBackend() {
     }
 }
 
+async function storeLedgers(data) {
+    try {
+        await db.transaction(tx => {
+            // Insert data into the table
+            console.log("ledgers  received are", data[0]);
+            data.forEach(item => {
+                tx.executeSql(
+                    `INSERT INTO Ledgers (LedgerID, LedgerName) VALUES (?,?)`,
+                    [item.LedgerID, item.LedgerName]
+                );
+            });
+        });
+        console.log('Purchase Vouchers Data stored in the database successfully');
+    } catch (error) {
+        console.error('Error storing data in the database', error);
+        throw error;
+    }
+}
 
 async function storePurchaseVouchers(data) {
     try {
@@ -539,10 +716,33 @@ async function storeInventoryData(data) {
     }
 }
 
+async function checkData() {
+    db.transaction(txn => {
+        txn.executeSql(
+            'SELECT * FROM Ledgers ORDER BY LedgerID LIMIT 3',
+            null,
+            (tx, result) => {
+                let len = result.rows.length;
+
+                // let results = [];
+                if (len > 1) {
+                    console.log("Data present", len);
+                    return true;
+                }
+                else {
+                    console.log("Fetching Data from Backend");
+                    fetchDataFromBackend()
+                }
+            },
+            error => {
+                console.error('Error fetching Data at checkData():', error);
+                return false;
+            },
+        );
+    });
+
+}
 
 
 
-
-
-
-export { createTable, insertItem, getAllItems, searchItems, checkLedgersTable, dropTable, fetchDataFromBackend, getTotalPurchaseAmount, getPurchaseVouchers, getTotalSalesAmount };
+export { createTable, insertItem, getAllItems, searchItems, checkLedgersTable, dropTable, fetchDataFromBackend, getPurchaseVouchers, getLedgerDetails, checkData, getSalesVouchers };

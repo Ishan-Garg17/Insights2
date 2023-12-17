@@ -6,29 +6,10 @@ import CalendarPicker from 'react-native-calendar-picker';
 import { useRoute } from '@react-navigation/native';
 
 import Modal from 'react-native-modal';
-import { getTotalPurchaseAmount, getTotalSalesAmount } from '../DatabaseConfig';
+import { getLedgerDetails, getTotalPurchaseAmount, getTotalSalesAmount } from '../DatabaseConfig';
 
-// import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 const DetailsScreen = ({ navigation }) => {
 
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [isExpanded, setExpanded] = useState(false);
-
-    const handleToggle = () => {
-        setExpanded(!isExpanded);
-    };
-
-
-    const [selectedStartDate, setSelectedStartDate] = useState(null);
-    const [selectedEndDate, setSelectedEndDate] = useState(null);
-    const [purchaseAmount, setPurchaseAmount] = useState(null);
-    const [salesAmount, setSalesAmount] = useState(null);
-    const [isModalVisible, setModalVisible] = useState(false);
-
-    if (selectedStartDate) {
-        console.log("Dates Selected are", selectedStartDate, selectedEndDate, selectedStartDate.toString());
-
-    }
     const onDateChange = (date, type) => {
         if (type === 'END_DATE') {
             setSelectedEndDate(date);
@@ -40,11 +21,26 @@ const DetailsScreen = ({ navigation }) => {
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
     };
+    const [selectedStartDate, setSelectedStartDate] = useState(null);
+    const [selectedEndDate, setSelectedEndDate] = useState(null);
+    const [isModalVisible, setModalVisible] = useState(false);
+
+
+    const [purchaseAmount, setPurchaseAmount] = useState(null);
+    const [details, setDetails] = useState([]);
+    const [salesAmount, setSalesAmount] = useState(null);
+    const [isExpanded, setExpanded] = useState(false);
+
+
+    const handleToggle = () => {
+        setExpanded(!isExpanded);
+    };
+
     const route = useRoute();
 
     const { someKey } = route.params;
 
-    console.log("navigation data ius", someKey);
+    console.log("navigation data is", someKey);
 
     React.useLayoutEffect(() => {
         navigation.setOptions({
@@ -76,23 +72,18 @@ const DetailsScreen = ({ navigation }) => {
             ),
             // You can add more options as needed
         });
-
+        getLedgerDetails(someKey.id, setDetails)
     }, [navigation]);
 
-    React.useLayoutEffect(() => {
-        getTotalPurchaseAmount(someKey.id, setPurchaseAmount)
-        getTotalSalesAmount(someKey.id, setSalesAmount)
+    console.log("Details in app are", details);
 
-    }, [navigation]);
-
-    console.log("purhcase amount is", purchaseAmount);
     return (
         <View style={styles.container}>
             {/* <Text style={styles.title}>Select Date Range</Text> */}
             <TouchableOpacity onPress={toggleModal} style={styles.button}>
                 <Text style={styles.buttonText}>Open Calendar</Text>
             </TouchableOpacity>
-            {purchaseAmount && (
+            {details[0]?.totalPurchaseAmount && (
                 <View style={styles.textContainer}>
                     <TouchableOpacity style={styles.mainList} onPress={handleToggle}>
                         <Text style={{ color: 'black', fontWeight: 300 }}>Overview</Text>
@@ -116,8 +107,8 @@ const DetailsScreen = ({ navigation }) => {
                         <TouchableOpacity style={styles.mainList}
                             onPress={() => navigation.navigate('PurchaseScreen', { someKey: someKey })}
                         >
-                            <Text>PurchaseVouchers </Text>
-                            <Text style={{ color: 'black', fontWeight: 500 }}>{purchaseAmount.toLocaleString('en-IN', {
+                            <Text style={{ color: 'black' }}>PurchaseVouchers </Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{details[0]?.totalPurchaseAmount.toLocaleString('en-IN', {
                                 maximumFractionDigits: 2,
                                 style: 'currency',
                                 currency: 'INR'
@@ -126,7 +117,7 @@ const DetailsScreen = ({ navigation }) => {
                     </View>
                 </View>
             )}
-            {salesAmount && (
+            {details[0]?.totalSalesAmount && (
                 <View style={styles.textContainer}>
                     <TouchableOpacity style={styles.mainList} onPress={handleToggle}>
                         <Text style={{ color: 'black', fontWeight: 300 }}>Overview</Text>
@@ -148,10 +139,10 @@ const DetailsScreen = ({ navigation }) => {
                     </View>
                     <View style={[styles.textContainer, { marginTop: 20 }]}>
                         <TouchableOpacity style={styles.mainList}
-                            onPress={() => navigation.navigate('PurchaseScreen', { someKey: someKey })}
+                            onPress={() => navigation.navigate('SalesScreen', { someKey: someKey })}
                         >
-                            <Text>SalesVouchers </Text>
-                            <Text style={{ color: 'black', fontWeight: 500 }}>{salesAmount.toLocaleString('en-IN', {
+                            <Text style={{ color: 'black' }}>SalesVouchers </Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{details[0]?.totalSalesAmount.toLocaleString('en-IN', {
                                 maximumFractionDigits: 2,
                                 style: 'currency',
                                 currency: 'INR'

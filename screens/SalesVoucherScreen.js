@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRoute } from '@react-navigation/native';
-import { getPurchaseVouchers } from '../DatabaseConfig';
+import { getPurchaseVouchers, getSalesVouchers } from '../DatabaseConfig';
 
-const PurchaseVouchersScreen = ({ navigation }) => {
+const SalesVouchersScreen = ({ navigation }) => {
     const [vouchers, setVouchers] = useState([]); // Corrected state initialization
     const route = useRoute();
     const { someKey } = route.params;
@@ -15,7 +15,7 @@ const PurchaseVouchersScreen = ({ navigation }) => {
             setVouchers(fetchedVouchers);
         };
 
-        getPurchaseVouchers(someKey.id, printData)
+        getSalesVouchers(someKey.id, printData)
     }, [someKey.id]); // Corrected dependency array
 
     const renderItem = ({ item }) => (
@@ -24,7 +24,7 @@ const PurchaseVouchersScreen = ({ navigation }) => {
         >
             <View style={styles.rowContainer}>
                 <Text style={styles.textItem}>{item.NARRATION}</Text>
-                <Text style={styles.textItem}>{item.TOTALAMOUNT.toLocaleString('en-IN', {
+                <Text style={styles.textItem}>{item.totalAmount.toLocaleString('en-IN', {
                     maximumFractionDigits: 2,
                     style: 'currency',
                     currency: 'INR'
@@ -127,4 +127,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default PurchaseVouchersScreen;
+export default SalesVouchersScreen;

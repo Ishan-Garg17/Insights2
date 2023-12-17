@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, {useLayoutEffect} from 'react'
 import {KeyboardAvoidingView, Platform} from 'react-native'
 import {NavigationContainer} from '@react-navigation/native'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
@@ -7,15 +7,22 @@ import HomeScreen from './screens/HomeScreen'
 import DetailsScreen from './screens/DetailsScreen'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import {SafeAreaView} from 'react-native-safe-area-context'
-import {createTable, fetchDataFromBackend} from './DatabaseConfig'
+import {checkData, createTable, fetchDataFromBackend} from './DatabaseConfig'
 import PurchaseVouchersScreen from './screens/PurchaseVouchersScreen'
 import PurchaseVoucherDetails from './screens/PurchaseVoucherDetails'
+import LoadingScreen from './screens/LoadingScreen'
+import SalesVouchersScreen from './screens/SalesVoucherScreen'
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
 
 const HomeStack: React.FC = () => (
   <Stack.Navigator>
+    <Stack.Screen
+      name="Loader"
+      component={LoadingScreen}
+      options={{headerShown: false}}
+    />
     <Stack.Screen
       name="Home"
       component={HomeScreen}
@@ -24,9 +31,10 @@ const HomeStack: React.FC = () => (
     <Stack.Screen name="DetailsScreen" component={DetailsScreen} />
     <Stack.Screen name="PurchaseScreen" component={PurchaseVouchersScreen} />
     <Stack.Screen
-      name="PurchaseVoucherScreen"
+      name="PurchaseVoucherDetailsScreen"
       component={PurchaseVoucherDetails}
     />
+    <Stack.Screen name="SalesScreen" component={SalesVouchersScreen} />
   </Stack.Navigator>
 )
 
@@ -49,9 +57,9 @@ const SupportStack: React.FC = () => (
 )
 
 const App: React.FC = () => {
-  useEffect(() => {
+  useLayoutEffect(() => {
     createTable()
-    // fetchDataFromBackend()
+    checkData()
   }, [])
 
   return (
@@ -64,6 +72,7 @@ const App: React.FC = () => {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{flex: 1}}
+          // keyboardVerticalOffset={Platform.select({ios: 0, android: 10})}
           enabled>
           <Tab.Navigator
             screenOptions={({route}) => ({
