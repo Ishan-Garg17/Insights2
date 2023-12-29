@@ -11,7 +11,7 @@ const SalesVouchersScreen = ({ navigation }) => {
 
     useEffect(() => {
         const printData = (fetchedVouchers) => {
-            console.log("Fetching Vouchers", fetchedVouchers.length, fetchedVouchers[fetchedVouchers.length - 21]);
+            console.log("Fetching Vouchers", fetchedVouchers.length);
             setVouchers(fetchedVouchers);
         };
 
@@ -20,7 +20,7 @@ const SalesVouchersScreen = ({ navigation }) => {
 
     const renderItem = ({ item }) => (
         <TouchableOpacity activeOpacity={1} style={styles.mainList}
-            onPress={() => navigation.navigate('PurchaseVoucherScreen', { voucher: item })}
+            onPress={() => navigation.navigate('SalesVoucherDetails', { voucher: item })}
         >
             <View style={styles.rowContainer}>
                 <Text style={styles.textItem}>{item.NARRATION}</Text>
@@ -42,7 +42,7 @@ const SalesVouchersScreen = ({ navigation }) => {
                 <View style={styles.textContainer}>
                     <FlatList
                         data={vouchers}
-                        keyExtractor={(item) => item.ID} // Corrected key extraction
+                        keyExtractor={(item) => item.GUID} // Corrected key extraction
                         renderItem={renderItem}
                     />
                 </View>

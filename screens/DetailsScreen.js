@@ -92,15 +92,22 @@ const DetailsScreen = ({ navigation }) => {
                     <View style={[styles.bottomList, isExpanded && { display: 'block' }]}>
                         <View style={styles.mainList}>
                             <Text style={{ color: 'black', fontWeight: 300 }}>Last Purchase Date</Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{details[0]?.lastPurchaseDate}</Text>
+
                         </View>
                         <View style={styles.mainList} >
                             <Text style={{ color: 'black', fontWeight: 300 }}>Last Payment Date</Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{details[0]?.lastPaymentDate}</Text>
+
                         </View>
                         <View style={styles.mainList} >
                             <Text style={{ color: 'black', fontWeight: 300 }}>No of Purchase Invoices</Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{details[0]?.totalPurchaseInvoices}</Text>
+
                         </View>
                         <View style={styles.mainList}>
                             <Text style={{ color: 'black', fontWeight: 300 }}>Avg Purchase Invoice Amt</Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{Math.round(details[0]?.totalPurchaseAmount / details[0]?.totalPurchaseInvoices)}</Text>
                         </View>
                     </View>
                     <View style={[styles.textContainer, { marginTop: 20 }]}>
@@ -109,6 +116,18 @@ const DetailsScreen = ({ navigation }) => {
                         >
                             <Text style={{ color: 'black' }}>PurchaseVouchers </Text>
                             <Text style={{ color: 'black', fontWeight: 500 }}>{details[0]?.totalPurchaseAmount.toLocaleString('en-IN', {
+                                maximumFractionDigits: 2,
+                                style: 'currency',
+                                currency: 'INR'
+                            })} </Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={[styles.textContainer, { marginTop: 20 }]}>
+                        <TouchableOpacity style={styles.mainList}
+                            onPress={() => navigation.navigate('PaymentScreen', { someKey: someKey })}
+                        >
+                            <Text style={{ color: 'black' }}>Payment</Text>
+                            <Text style={{ color: 'black', fontWeight: 500 }}>{details[0]?.paymentSum.toLocaleString('en-IN', {
                                 maximumFractionDigits: 2,
                                 style: 'currency',
                                 currency: 'INR'

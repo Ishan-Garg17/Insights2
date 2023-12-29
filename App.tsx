@@ -12,6 +12,7 @@ import PurchaseVouchersScreen from './screens/PurchaseVouchersScreen'
 import PurchaseVoucherDetails from './screens/PurchaseVoucherDetails'
 import LoadingScreen from './screens/LoadingScreen'
 import SalesVouchersScreen from './screens/SalesVoucherScreen'
+import SalesVoucherDetails from './screens/SalesVoucherDetails'
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -31,8 +32,14 @@ const HomeStack: React.FC = () => (
     <Stack.Screen name="DetailsScreen" component={DetailsScreen} />
     <Stack.Screen name="PurchaseScreen" component={PurchaseVouchersScreen} />
     <Stack.Screen
-      name="PurchaseVoucherDetailsScreen"
+      name="PurchaseVoucherDetails"
       component={PurchaseVoucherDetails}
+      options={{headerShown: false}}
+    />
+    <Stack.Screen
+      name="SalesVoucherDetails"
+      component={SalesVoucherDetails}
+      options={{headerShown: false}}
     />
     <Stack.Screen name="SalesScreen" component={SalesVouchersScreen} />
   </Stack.Navigator>

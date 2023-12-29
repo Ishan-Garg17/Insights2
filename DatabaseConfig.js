@@ -743,6 +743,34 @@ async function checkData() {
 
 }
 
+async function getSalesItems(id, callback) {
+    db.transaction(txn => {
+        txn.executeSql(
+            `SELECT * FROM SalesItems WHERE voucherID = ${id}`,
+            null,
+            (tx, result) => {
+                let len = result.rows.length;
+
+                let results = [];
+                if (len > 0) {
+                    for (let i = 0; i < len; i++) {
+                        let item = result.rows.item(i);
+                        results.push(item);
+                    }
+                    console.log('fetching sale items:', results);
+                    callback(results)
+                }
+                return true;
+            },
+            error => {
+                console.error('Error fetching Data at getSalesItems:', error);
+                return false;
+            },
+        );
+    });
+
+}
 
 
-export { createTable, insertItem, getAllItems, searchItems, checkLedgersTable, dropTable, fetchDataFromBackend, getPurchaseVouchers, getLedgerDetails, checkData, getSalesVouchers };
+
+export { createTable, insertItem, getAllItems, searchItems, checkLedgersTable, dropTable, fetchDataFromBackend, getPurchaseVouchers, getLedgerDetails, checkData, getSalesVouchers, getSalesItems };

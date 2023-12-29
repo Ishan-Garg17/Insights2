@@ -20,7 +20,7 @@ const PurchaseVouchersScreen = ({ navigation }) => {
 
     const renderItem = ({ item }) => (
         <TouchableOpacity activeOpacity={1} style={styles.mainList}
-            onPress={() => navigation.navigate('PurchaseVoucherScreen', { voucher: item })}
+            onPress={() => navigation.navigate('PurchaseVoucherDetails', { voucher: item })}
         >
             <View style={styles.rowContainer}>
                 <Text style={styles.textItem}>{item.NARRATION}</Text>
