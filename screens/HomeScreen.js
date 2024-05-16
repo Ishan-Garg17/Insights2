@@ -3,12 +3,9 @@ import {
     View,
     Text,
     TouchableOpacity,
-    StyleSheet,
-    TextInput,
-    KeyboardAvoidingView,
+    StyleSheet
 } from 'react-native';
-import { ScrollView, FlatList } from 'react-native-gesture-handler';
-import _ from 'lodash';
+import { FlatList } from 'react-native-gesture-handler';
 import { getAllItems, searchItems } from '../DatabaseConfig';
 import { SearchBar } from 'react-native-elements';
 import { Animated } from 'react-native';
